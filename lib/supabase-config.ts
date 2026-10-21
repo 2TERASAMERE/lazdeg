@@ -7,7 +7,7 @@
  *
  * ⛔ Ne colle JAMAIS ici la clé « secret » ou « service_role » : elle donne un accès total.
  */
-export const SUPABASE_URL = ''
-export const SUPABASE_PUBLIC_KEY = ''
+export const SUPABASE_URL = 'https://ufcfjdgfdzgpfvuoxwoa.supabase.co'
+export const SUPABASE_PUBLIC_KEY = 'sb_publishable_-IFRExp-G_MvRCMndKONDQ_8YX27yxp'
 
 export const isSyncConfigured = SUPABASE_URL.startsWith('https://') && SUPABASE_PUBLIC_KEY.length > 20
