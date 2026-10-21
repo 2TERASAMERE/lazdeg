@@ -30,7 +30,7 @@ export function buildDraftSession(program: Program, date: string, last?: Session
   const exercises: Record<string, ExerciseLog> = {}
   for (const item of program.items) {
     const exercise = getExercise(item.exerciseId)
-    if (!exercise) continue
+    if (!exercise || exercise.deleted) continue
     const prev = last?.exercises[item.exerciseId]
     const sets: SetLog[] = Array.from({ length: item.sets }, (_, i) => {
       const reference = prev ? (prev.sets[i] ?? prev.sets[prev.sets.length - 1]) : undefined

@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { CalendarDays, ChevronRight, Plus, Trash2, X } from 'lucide-react'
-import { EXERCISES, MUSCLE_GROUPS, getExercise, isCustomProgram } from '@/lib/data'
+import { MUSCLE_GROUPS, getExercise, isCustomProgram } from '@/lib/data'
 import type { WeekDay } from '@/lib/dates'
 import { pluralize } from '@/lib/format'
-import type { Accent, PlannedExercise, Program } from '@/lib/types'
+import type { Accent, Exercise, PlannedExercise, Program } from '@/lib/types'
 
 interface Props {
+  /** Exercices actifs, proposés à la création d'un programme. */
+  exercises: Exercise[]
   week: WeekDay[]
   programs: Program[]
   assignments: (string | null)[]
@@ -18,7 +20,7 @@ interface Props {
 
 const ACCENTS: Accent[] = ['amber', 'blue', 'violet']
 
-export function ProgramView({ week, programs, assignments, onAssign, onCreate, onDelete }: Props) {
+export function ProgramView({ exercises, week, programs, assignments, onAssign, onCreate, onDelete }: Props) {
   const [openId, setOpenId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [name, setName] = useState('')
@@ -34,12 +36,14 @@ export function ProgramView({ week, programs, assignments, onAssign, onCreate, o
 
   const create = () => {
     if (!canCreate) return
-    const items: PlannedExercise[] = EXERCISES.filter((e) => selected.includes(e.id)).map((e) => ({
-      exerciseId: e.id,
-      sets: e.kind === 'cardio' ? 1 : 3,
-      target: 10,
-      restSeconds: e.kind === 'cardio' ? 0 : 60,
-    }))
+    const items: PlannedExercise[] = exercises
+      .filter((e) => selected.includes(e.id))
+      .map((e) => ({
+        exerciseId: e.id,
+        sets: e.kind === 'cardio' ? 1 : 3,
+        target: 10,
+        restSeconds: e.kind === 'cardio' ? 0 : 60,
+      }))
     onCreate({
       id: `custom-${Date.now()}`,
       name: name.trim(),
@@ -152,7 +156,7 @@ export function ProgramView({ week, programs, assignments, onAssign, onCreate, o
                   <ul className="program-exercises">
                     {program.items.map((item) => {
                       const exercise = getExercise(item.exerciseId)
-                      if (!exercise) return null
+                      if (!exercise || exercise.deleted) return null
                       return (
                         <li key={item.exerciseId}>
                           <span>{exercise.name}</span>
@@ -212,7 +216,7 @@ export function ProgramView({ week, programs, assignments, onAssign, onCreate, o
               />
             </label>
             {MUSCLE_GROUPS.map((group) => {
-              const list = EXERCISES.filter((e) => e.muscleGroup === group)
+              const list = exercises.filter((e) => e.muscleGroup === group)
               if (list.length === 0) return null
               return (
                 <div className="picker-group" key={group}>

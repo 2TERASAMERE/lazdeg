@@ -1,11 +1,13 @@
 import type { Exercise, MuscleGroup, Program } from './types'
 
+type ExerciseSeed = Omit<Exercise, 'updatedAt' | 'deleted'>
+
 /**
  * Catalogue des machines et exercices.
  * ⚠️ Les réglages et les conseils ci-dessous sont des textes d'exemple :
  * remplace-les par les vrais conseils d'Olivier.
  */
-export const EXERCISES: Exercise[] = [
+const EXERCISE_SEEDS: ExerciseSeed[] = [
   {
     id: 'velo-droit',
     name: 'Vélo droit',
@@ -193,10 +195,22 @@ export const MUSCLE_GROUPS: MuscleGroup[] = [
   'Cardio',
 ]
 
-const EXERCISES_BY_ID = new Map(EXERCISES.map((exercise) => [exercise.id, exercise]))
+/** Exercices d'origine. Copiés dans la sauvegarde au premier lancement, puis modifiables librement. */
+export const DEFAULT_EXERCISES: Exercise[] = EXERCISE_SEEDS.map((e) => ({ ...e, updatedAt: 0 }))
+
+/**
+ * Catalogue courant, consulté par getExercise().
+ * AppShell le met à jour à chaque rendu depuis l'état (voir setCatalog) : ainsi la logique pure
+ * (volume, résumé, historique) retrouve les exercices, y compris ceux que tu as créés ou supprimés.
+ */
+let catalog = new Map<string, Exercise>(DEFAULT_EXERCISES.map((exercise) => [exercise.id, exercise]))
+
+export function setCatalog(exercises: Exercise[]): void {
+  catalog = new Map(exercises.map((exercise) => [exercise.id, exercise]))
+}
 
 export function getExercise(id: string): Exercise | undefined {
-  return EXERCISES_BY_ID.get(id)
+  return catalog.get(id)
 }
 
 /**

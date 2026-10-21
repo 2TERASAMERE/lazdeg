@@ -23,11 +23,26 @@ Ouvre http://localhost:3000. Sur téléphone (même Wi-Fi), utilise l'adresse r�
 
 ## Données
 
-Tout est enregistré dans le navigateur (localStorage). Dans l'onglet **Progression**, tu peux exporter et restaurer une sauvegarde JSON.
+Tout est enregistré dans le navigateur (localStorage), donc l'app fonctionne même sans connexion. Pour retrouver tes données sur plusieurs appareils (PC, iPhone…), active la **synchronisation** (section suivante). Dans l'onglet **Progression**, tu peux aussi exporter et restaurer une sauvegarde JSON.
+
+## Synchronisation (PC ↔ téléphone)
+
+Facultative. Elle utilise [Supabase](https://supabase.com) (gratuit) : un seul compte, protégé par mot de passe, et tes exercices, programmes et séances sont fusionnés entre tous tes appareils. À faire une seule fois :
+
+1. **Crée un projet** sur supabase.com (« New project »). Note le mot de passe de la base, choisis une région en Europe. Les projets gratuits peuvent être mis en pause après une période d'inactivité (environ une semaine) : un clic dans le tableau de bord suffit à les réactiver, sans perte de données.
+2. **Crée la table :** menu **SQL Editor** → **New query** → colle tout le contenu du fichier `supabase/setup.sql` → **Run**.
+3. **Crée ton compte :** menu **Authentication → Users → Add user → Create new user**. Renseigne ton e-mail et un mot de passe, et coche **Auto Confirm User**.
+4. **Ferme les inscriptions** pour que personne d'autre ne puisse créer de compte : **Authentication → Sign In / Providers → Email** (le nom du menu peut varier un peu) et désactive **Allow new users to sign up**.
+5. **Récupère les deux valeurs publiques :** **Project Settings → API Keys**. Copie l'**URL du projet** et la clé **Publishable** (ou, selon ton projet, la clé **anon** de l'onglet « Legacy »). ⛔ Ne copie jamais la clé **secret** ou **service_role**.
+6. **Colle-les dans `lib/supabase-config.ts`** (entre les guillemets de `SUPABASE_URL` et `SUPABASE_PUBLIC_KEY`), puis enregistre. Ces deux valeurs peuvent être publiques : tes données sont protégées par ton mot de passe et par les règles de la base.
+7. Une fois le site republié, ouvre **Progression → Synchronisation** et connecte-toi avec l'e-mail et le mot de passe de l'étape 3. Fais de même sur chaque appareil.
+
+Ensuite, tout se synchronise automatiquement : quelques secondes après chaque modification, quand tu reviens sur l'app, et toutes les minutes. Si tu modifies des choses différentes sur deux appareils, elles sont fusionnées. Si tu modifies *le même élément* sur les deux, la modification la plus récente l'emporte.
 
 ## Personnaliser
 
-- Exercices, conseils d'Olivier, programmes : `lib/data.ts`
+- Exercices et conseils d'Olivier : directement dans l'app, onglet **Glossaire** (ajouter, modifier, supprimer). Valeurs de départ : `lib/data.ts`
+- Programmes d'Olivier par défaut : `lib/data.ts`
 - Prénom, nom du coach, durées de repos : `lib/config.ts`
 - Couleurs et styles : `app/globals.css`
 

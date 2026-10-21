@@ -1414,3 +1414,67 @@ button.glossary-card {
 .day-card.today > span {
   color: var(--primary);
 }
+
+/* ───────── Glossaire éditable + synchronisation ───────── */
+.round-add {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+}
+.create-program-card label textarea,
+.create-program-card label select,
+.sync-form label input {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #465340;
+  border-radius: 7px;
+  outline: none;
+  background: #151a16;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 16px;
+}
+.create-program-card label textarea {
+  min-height: 84px;
+  line-height: 1.45;
+  resize: vertical;
+}
+.create-program-card label select {
+  min-height: 44px;
+}
+.create-program-card label select:disabled {
+  opacity: 0.6;
+}
+.create-program-card label textarea:focus,
+.create-program-card label select:focus,
+.sync-form label input:focus {
+  border-color: var(--primary);
+}
+.glossary-actions {
+  display: flex;
+  gap: 8px;
+}
+.glossary-actions .secondary-button,
+.glossary-actions .danger-button {
+  flex: 1;
+  width: auto;
+  min-height: 44px;
+  margin-top: 0;
+  justify-content: center;
+}
+.sync-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.sync-form label span {
+  display: block;
+  margin-bottom: 5px;
+  color: #9eaa9e;
+  font-size: 10px;
+  font-weight: 700;
+}
+.sync-form .finish-button {
+  margin-top: 2px;
+}

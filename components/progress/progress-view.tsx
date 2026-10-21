@@ -9,12 +9,14 @@ import type { AppState } from '@/lib/types'
 import { hasProgress, sessionVolume } from '@/lib/workout'
 
 interface Props {
+  /** Contenu affiché avant la sauvegarde (panneau de synchronisation). */
+  children?: React.ReactNode
   state: AppState
   todayIso: string
   onImport: (state: AppState) => void
 }
 
-export function ProgressView({ state, todayIso, onImport }: Props) {
+export function ProgressView({ children, state, todayIso, onImport }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
 
@@ -162,6 +164,8 @@ export function ProgressView({ state, todayIso, onImport }: Props) {
           </div>
         </>
       )}
+
+      {children}
 
       <div className="panel">
         <div className="panel-heading">

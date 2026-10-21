@@ -39,7 +39,7 @@ export function useWorkout({ state, update, program, date }: Options) {
         const current =
           prev.sessions[key] ??
           buildDraftSession(program, date, findLastSession(prev.sessions, program.id, date))
-        return { ...prev, sessions: { ...prev.sessions, [key]: fn(current) } }
+        return { ...prev, sessions: { ...prev.sessions, [key]: { ...fn(current), updatedAt: Date.now() } } }
       })
     },
     [program, key, date, update],

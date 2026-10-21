@@ -19,6 +19,10 @@ export interface Exercise {
   settings: string[]
   /** « Conseil d'Olivier » : sécurité, posture, tempo. */
   coachTip: string
+  /** Date de dernière modification (ms). Sert à fusionner les appareils. */
+  updatedAt: number
+  /** Supprimé du glossaire. L'exercice reste connu pour l'historique des séances. */
+  deleted?: boolean
 }
 
 /** Un exercice dans un programme. */
@@ -39,6 +43,8 @@ export interface Program {
   accent: Accent
   durationMin: number
   items: PlannedExercise[]
+  updatedAt?: number
+  deleted?: boolean
 }
 
 export interface SetLog {
@@ -65,14 +71,20 @@ export interface SessionLog {
   programName: string
   startedAt: number
   finishedAt?: number
+  /** Dernière modification (ms), pour la synchronisation. */
+  updatedAt?: number
   exercises: Record<string, ExerciseLog>
 }
 
-/** Tout ce qui est sauvegardé. Les programmes par défaut restent dans le code. */
+/** Tout ce qui est sauvegardé (et synchronisé). Les programmes d'Olivier restent dans le code. */
 export interface AppState {
   version: 1
+  /** Catalogue complet (exercices d'origine + les tiens), y compris les supprimés. */
+  exercises: Exercise[]
+  /** Programmes créés par l'utilisateur, y compris les supprimés. */
   customPrograms: Program[]
   /** Programme prévu pour chaque jour, du lundi (0) au dimanche (6). */
   assignments: (string | null)[]
+  assignmentsUpdatedAt: number
   sessions: Record<string, SessionLog>
 }

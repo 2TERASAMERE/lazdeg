@@ -1,31 +1,65 @@
-import { DEFAULT_ASSIGNMENTS } from './data'
 import { STORAGE_KEY } from './config'
-import type { AppState } from './types'
+import { DEFAULT_ASSIGNMENTS, DEFAULT_EXERCISES } from './data'
+import type { AppState, Exercise, Program } from './types'
 
 /**
- * Couche de sauvegarde.
- * Aujourd'hui : localStorage (données sur cet appareil uniquement).
- * Plus tard : remplacer le contenu de ces fonctions par des appels Supabase,
- * sans toucher au reste de l'app.
+ * Sauvegarde locale (localStorage). C'est la copie de travail de l'app : elle fonctionne hors connexion.
+ * La synchronisation avec le cloud (lib/sync.ts) fusionne ensuite cet état avec celui des autres appareils.
  */
 
 export function createDefaultState(): AppState {
-  return { version: 1, customPrograms: [], assignments: [...DEFAULT_ASSIGNMENTS], sessions: {} }
-}
-
-/** Valide et normalise un objet inconnu (sauvegarde locale ou fichier importé). */
-export function normalizeState(input: unknown): AppState | null {
-  if (!input || typeof input !== 'object') return null
-  const raw = input as Partial<AppState>
-  if (raw.version !== 1) return null
-  const base = createDefaultState()
   return {
     version: 1,
-    customPrograms: Array.isArray(raw.customPrograms) ? raw.customPrograms : base.customPrograms,
-    assignments:
-      Array.isArray(raw.assignments) && raw.assignments.length === 7 ? raw.assignments : base.assignments,
-    sessions: raw.sessions && typeof raw.sessions === 'object' ? raw.sessions : base.sessions,
+    exercises: DEFAULT_EXERCISES.map((e) => ({ ...e })),
+    customPrograms: [],
+    assignments: [...DEFAULT_ASSIGNMENTS],
+    assignmentsUpdatedAt: 0,
+    sessions: {},
   }
+}
+
+const isObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object'
+
+function isExercise(v: unknown): v is Exercise {
+  return isObject(v) && typeof v.id === 'string' && typeof v.name === 'string' && Array.isArray(v.settings)
+}
+
+function isProgram(v: unknown): v is Program {
+  return isObject(v) && typeof v.id === 'string' && typeof v.name === 'string' && Array.isArray(v.items)
+}
+
+/** Valide un objet inconnu (sauvegarde locale, cloud ou fichier importé) et complète les champs manquants. */
+export function normalizeState(input: unknown): AppState | null {
+  if (!isObject(input) || input.version !== 1) return null
+  const base = createDefaultState()
+
+  const exercises = (Array.isArray(input.exercises) ? input.exercises.filter(isExercise) : []).map((e) => ({
+    ...e,
+    updatedAt: e.updatedAt ?? 0,
+  }))
+  // Exercices d'origine ajoutés plus tard dans le code : on les complète s'ils sont inconnus.
+  const known = new Set(exercises.map((e) => e.id))
+  for (const d of DEFAULT_EXERCISES) if (!known.has(d.id)) exercises.push({ ...d })
+
+  const customPrograms = (
+    Array.isArray(input.customPrograms) ? input.customPrograms.filter(isProgram) : []
+  ).map((p) => ({ ...p, updatedAt: p.updatedAt ?? 0 }))
+
+  const assignments =
+    Array.isArray(input.assignments) && input.assignments.length === 7
+      ? (input.assignments as (string | null)[])
+      : base.assignments
+  // Ancienne sauvegarde sans date : si le planning a été changé, on le considère comme récent.
+  const assignmentsUpdatedAt =
+    typeof input.assignmentsUpdatedAt === 'number'
+      ? input.assignmentsUpdatedAt
+      : JSON.stringify(assignments) === JSON.stringify(base.assignments)
+        ? 0
+        : Date.now()
+
+  const sessions = isObject(input.sessions) ? (input.sessions as AppState['sessions']) : base.sessions
+
+  return { version: 1, exercises, customPrograms, assignments, assignmentsUpdatedAt, sessions }
 }
 
 export function loadState(): AppState {

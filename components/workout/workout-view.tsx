@@ -53,7 +53,7 @@ export function WorkoutView({
       .map((item) => ({ item, exercise: getExercise(item.exerciseId) }))
       .filter(
         (e): e is { item: typeof e.item; exercise: Exercise } =>
-          !!e.exercise && !!session.exercises[e.item.exerciseId],
+          !!e.exercise && !e.exercise.deleted && !!session.exercises[e.item.exerciseId],
       )
   }, [program, session])
 
@@ -102,7 +102,7 @@ export function WorkoutView({
       <div className="section-kicker">{formatLongDate(day.iso).toUpperCase()}</div>
       <div className="hero-row">
         <div>
-          <h1>Let's go, {USER_NAME}.</h1>
+          <h1>On y va, {USER_NAME}.</h1>
           <p className="muted-copy">
             {program ? 'Ta séance est prête.' : 'Pas de séance prévue ce jour-là.'}
           </p>
