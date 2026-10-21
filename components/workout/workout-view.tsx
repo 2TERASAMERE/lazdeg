@@ -102,7 +102,7 @@ export function WorkoutView({
       <div className="section-kicker">{formatLongDate(day.iso).toUpperCase()}</div>
       <div className="hero-row">
         <div>
-          <h1>On y va, {USER_NAME}.</h1>
+          <h1>Let's go, {USER_NAME}.</h1>
           <p className="muted-copy">
             {program ? 'Ta séance est prête.' : 'Pas de séance prévue ce jour-là.'}
           </p>
