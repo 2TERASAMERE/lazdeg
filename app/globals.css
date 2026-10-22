@@ -1478,3 +1478,108 @@ button.glossary-card {
 .sync-form .finish-button {
   margin-top: 2px;
 }
+
+/* ───────── Édition de programme : liste ordonnable ───────── */
+.program-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.program-item {
+  padding: 8px 10px 10px 4px;
+  border: 1px solid #39433a;
+  border-radius: 9px;
+  background: #151a16;
+  transition: transform 0.15s;
+}
+.program-item.is-dragging {
+  position: relative;
+  z-index: 2;
+  transition: none;
+  border-color: var(--primary);
+  background: #1d261b;
+  box-shadow: 0 10px 24px #0009;
+}
+.program-item-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.drag-handle {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: none;
+  color: #8d978e;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.drag-handle:active {
+  cursor: grabbing;
+  color: var(--primary);
+}
+.program-item-name {
+  flex: 1;
+  min-width: 0;
+}
+.program-item-name strong,
+.program-item-name small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.program-item-name strong {
+  font-size: 13px;
+}
+.program-item-name small {
+  margin-top: 3px;
+  color: #7d887f;
+  font-size: 11px;
+}
+.program-item-remove {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+}
+.program-item-fields {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding-left: 50px;
+}
+.field-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #9eaa9e;
+  font-size: 11px;
+}
+.field-inline input {
+  width: 64px;
+  min-height: 44px;
+  padding: 0 8px;
+  text-align: center;
+  border: 1px solid #465340;
+  border-radius: 7px;
+  outline: none;
+  background: #101311;
+  color: var(--foreground);
+  font-size: 16px;
+}
+.field-inline input:focus {
+  border-color: var(--primary);
+}
+.field-times {
+  color: #6c766e;
+}
+.program-details .glossary-actions {
+  margin-top: 12px;
+}
