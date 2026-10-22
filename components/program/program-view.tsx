@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { CalendarDays, ChevronRight, Plus, Trash2, X } from 'lucide-react'
-import { MUSCLE_GROUPS, getExercise, isCustomProgram } from '@/lib/data'
+import { CalendarDays, ChevronRight, Copy, Pencil, Plus, Trash2 } from 'lucide-react'
+import { getExercise, isCustomProgram } from '@/lib/data'
 import type { WeekDay } from '@/lib/dates'
 import { pluralize } from '@/lib/format'
-import type { Accent, Exercise, PlannedExercise, Program } from '@/lib/types'
+import type { Exercise, Program } from '@/lib/types'
+import { ProgramForm } from './program-form'
 
 interface Props {
   /** Exercices actifs, proposés à la création d'un programme. */
@@ -15,46 +16,42 @@ interface Props {
   assignments: (string | null)[]
   onAssign: (dayIndex: number, programId: string) => void
   onCreate: (program: Program) => void
+  onUpdate: (program: Program) => void
   onDelete: (programId: string) => void
 }
 
-const ACCENTS: Accent[] = ['amber', 'blue', 'violet']
+type Editor = { mode: 'new' } | { mode: 'edit'; id: string } | null
 
-export function ProgramView({ exercises, week, programs, assignments, onAssign, onCreate, onDelete }: Props) {
+export function ProgramView({
+  exercises,
+  week,
+  programs,
+  assignments,
+  onAssign,
+  onCreate,
+  onUpdate,
+  onDelete,
+}: Props) {
   const [openId, setOpenId] = useState<string | null>(null)
-  const [showCreate, setShowCreate] = useState(false)
-  const [name, setName] = useState('')
-  const [duration, setDuration] = useState('45')
-  const [selected, setSelected] = useState<string[]>([])
+  const [editor, setEditor] = useState<Editor>(null)
 
   const programName = (id: string | null) => programs.find((p) => p.id === id)?.name
 
-  const toggleExercise = (id: string) =>
-    setSelected((items) => (items.includes(id) ? items.filter((x) => x !== id) : [...items, id]))
+  const saveNew = (program: Program) => {
+    onCreate(program)
+    setEditor(null)
+  }
 
-  const canCreate = name.trim().length > 0 && selected.length > 0
+  const saveEdit = (program: Program) => {
+    onUpdate(program)
+    setEditor(null)
+  }
 
-  const create = () => {
-    if (!canCreate) return
-    const items: PlannedExercise[] = exercises
-      .filter((e) => selected.includes(e.id))
-      .map((e) => ({
-        exerciseId: e.id,
-        sets: e.kind === 'cardio' ? 1 : 3,
-        target: 10,
-        restSeconds: e.kind === 'cardio' ? 0 : 60,
-      }))
-    onCreate({
-      id: `custom-${Date.now()}`,
-      name: name.trim(),
-      accent: ACCENTS[programs.length % ACCENTS.length],
-      durationMin: Math.max(5, parseInt(duration, 10) || 45),
-      items,
-    })
-    setName('')
-    setDuration('45')
-    setSelected([])
-    setShowCreate(false)
+  const duplicate = (program: Program) => {
+    const id = `custom-${Date.now()}`
+    onCreate({ ...program, id, name: `${program.name} (copie)`, updatedAt: undefined })
+    setOpenId(id)
+    setEditor({ mode: 'edit', id })
   }
 
   const remove = (program: Program) => {
@@ -63,6 +60,7 @@ export function ProgramView({ exercises, week, programs, assignments, onAssign, 
     ) {
       onDelete(program.id)
       setOpenId(null)
+      setEditor(null)
     }
   }
 
@@ -121,7 +119,7 @@ export function ProgramView({ exercises, week, programs, assignments, onAssign, 
             type="button"
             className="round-add"
             aria-label="Créer un programme"
-            onClick={() => setShowCreate(true)}
+            onClick={() => setEditor({ mode: 'new' })}
           >
             <Plus size={19} />
           </button>
@@ -129,6 +127,7 @@ export function ProgramView({ exercises, week, programs, assignments, onAssign, 
 
         {programs.map((program, index) => {
           const open = openId === program.id
+          const isEditing = editor?.mode === 'edit' && editor.id === program.id
           return (
             <div className={open ? 'program-block open' : 'program-block'} key={program.id}>
               <button
@@ -151,7 +150,18 @@ export function ProgramView({ exercises, week, programs, assignments, onAssign, 
                 </div>
                 <ChevronRight size={18} className={open ? 'rotate-90' : ''} />
               </button>
-              {open && (
+
+              {open && isEditing && (
+                <ProgramForm
+                  exercises={exercises}
+                  initial={program}
+                  programCount={programs.length}
+                  onSave={saveEdit}
+                  onCancel={() => setEditor(null)}
+                />
+              )}
+
+              {open && !isEditing && (
                 <div className="program-details">
                   <ul className="program-exercises">
                     {program.items.map((item) => {
@@ -169,78 +179,39 @@ export function ProgramView({ exercises, week, programs, assignments, onAssign, 
                       )
                     })}
                   </ul>
-                  {isCustomProgram(program) && (
-                    <button type="button" className="danger-button" onClick={() => remove(program)}>
-                      <Trash2 size={14} /> Supprimer ce programme
-                    </button>
-                  )}
+                  <div className="glossary-actions">
+                    {isCustomProgram(program) ? (
+                      <>
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          onClick={() => setEditor({ mode: 'edit', id: program.id })}
+                        >
+                          <Pencil size={14} /> Modifier
+                        </button>
+                        <button type="button" className="danger-button" onClick={() => remove(program)}>
+                          <Trash2 size={14} /> Supprimer
+                        </button>
+                      </>
+                    ) : (
+                      <button type="button" className="secondary-button" onClick={() => duplicate(program)}>
+                        <Copy size={14} /> Dupliquer pour modifier
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           )
         })}
 
-        {showCreate && (
-          <div className="create-program-card">
-            <div className="create-program-heading">
-              <div>
-                <strong>Nouveau programme</strong>
-                <span>Choisis un nom et les exercices à inclure.</span>
-              </div>
-              <button
-                type="button"
-                className="icon-button"
-                aria-label="Fermer"
-                onClick={() => setShowCreate(false)}
-              >
-                <X size={17} />
-              </button>
-            </div>
-            <label>
-              <span>Nom du programme</span>
-              <input
-                autoFocus
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ex. Haut du corps"
-                autoComplete="off"
-              />
-            </label>
-            <label>
-              <span>Durée estimée (minutes)</span>
-              <input
-                value={duration}
-                inputMode="numeric"
-                onChange={(e) => setDuration(e.target.value.replace(/\D/g, ''))}
-                placeholder="45"
-              />
-            </label>
-            {MUSCLE_GROUPS.map((group) => {
-              const list = exercises.filter((e) => e.muscleGroup === group)
-              if (list.length === 0) return null
-              return (
-                <div className="picker-group" key={group}>
-                  <p className="picker-title">{group.toUpperCase()}</p>
-                  <div className="picker-chips">
-                    {list.map((exercise) => (
-                      <button
-                        key={exercise.id}
-                        type="button"
-                        className={selected.includes(exercise.id) ? 'picker-chip selected' : 'picker-chip'}
-                        aria-pressed={selected.includes(exercise.id)}
-                        onClick={() => toggleExercise(exercise.id)}
-                      >
-                        {exercise.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-            <button type="button" className="finish-button" onClick={create} disabled={!canCreate}>
-              <Plus size={17} /> Créer le programme
-            </button>
-          </div>
+        {editor?.mode === 'new' && (
+          <ProgramForm
+            exercises={exercises}
+            programCount={programs.length}
+            onSave={saveNew}
+            onCancel={() => setEditor(null)}
+          />
         )}
       </div>
     </div>
