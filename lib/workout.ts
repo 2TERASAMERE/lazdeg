@@ -52,6 +52,15 @@ export function buildDraftSession(program: Program, date: string, last?: Session
   }
 }
 
+/** Complète une séance enregistrée avec les exercices ajoutés au programme depuis. */
+export function withNewExercises(stored: SessionLog, draft: SessionLog): SessionLog {
+  const missing = Object.keys(draft.exercises).filter((id) => !stored.exercises[id])
+  if (missing.length === 0) return stored
+  const exercises = { ...stored.exercises }
+  for (const id of missing) exercises[id] = draft.exercises[id]
+  return { ...stored, exercises }
+}
+
 export function updateExercise(
   session: SessionLog,
   exerciseId: string,
