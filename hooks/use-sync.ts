@@ -15,6 +15,7 @@ interface Options {
 }
 
 const DEBOUNCE_MS = 2000
+// Vérification périodique : toutes les 24 heures (valeur voulue).
 const POLL_MS = 86_400_000
 const MIN_GAP_MS = 10_000
 
@@ -22,7 +23,7 @@ const MIN_GAP_MS = 10_000
  * Synchronise l'état local avec le cloud (Supabase). Facultatif : sans configuration ni connexion,
  * l'app fonctionne exactement comme avant, avec le seul stockage local.
  *
- * Déclencheurs : connexion, retour sur l'app, retour du réseau, toutes les minutes, et 2 s après
+ * Déclencheurs : connexion, retour sur l'app, retour du réseau, toutes les 24 heures, et 2 s après
  * la dernière modification locale.
  */
 export function useSync({ state, ready, update }: Options) {

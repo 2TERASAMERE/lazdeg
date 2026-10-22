@@ -2,7 +2,14 @@
 
 import { useCallback, useMemo } from 'react'
 import type { AppState, Program, SessionLog } from '@/lib/types'
-import { buildDraftSession, findLastSession, sessionKey, updateExercise, updateSet } from '@/lib/workout'
+import {
+  buildDraftSession,
+  findLastSession,
+  sessionKey,
+  updateExercise,
+  updateSet,
+  withNewExercises,
+} from '@/lib/workout'
 
 interface Options {
   state: AppState
@@ -17,6 +24,7 @@ interface Options {
  * Séance du jour sélectionné.
  * Tant que rien n'est modifié, la séance n'existe qu'en mémoire (brouillon pré-rempli) :
  * elle n'est enregistrée — et ne compte dans l'historique — qu'à la première modification.
+ * Si le programme a gagné des exercices depuis, ils sont ajoutés à la séance déjà enregistrée.
  */
 export function useWorkout({ state, update, program, date }: Options) {
   const key = program ? sessionKey(date, program.id) : null
@@ -28,17 +36,18 @@ export function useWorkout({ state, update, program, date }: Options) {
   )
 
   const session: SessionLog | null = useMemo(() => {
-    if (stored) return stored
-    return program ? buildDraftSession(program, date, lastSession) : null
+    if (!program) return null
+    const draft = buildDraftSession(program, date, lastSession)
+    return stored ? withNewExercises(stored, draft) : draft
   }, [stored, program, date, lastSession])
 
   const patch = useCallback(
     (fn: (s: SessionLog) => SessionLog) => {
       if (!program || !key) return
       update((prev) => {
-        const current =
-          prev.sessions[key] ??
-          buildDraftSession(program, date, findLastSession(prev.sessions, program.id, date))
+        const draft = buildDraftSession(program, date, findLastSession(prev.sessions, program.id, date))
+        const saved = prev.sessions[key]
+        const current = saved ? withNewExercises(saved, draft) : draft
         return { ...prev, sessions: { ...prev.sessions, [key]: { ...fn(current), updatedAt: Date.now() } } }
       })
     },
