@@ -37,7 +37,18 @@ Facultative. Elle utilise [Supabase](https://supabase.com) (gratuit) : un seul c
 6. **Colle-les dans `lib/supabase-config.ts`** (entre les guillemets de `SUPABASE_URL` et `SUPABASE_PUBLIC_KEY`), puis enregistre. Ces deux valeurs peuvent être publiques : tes données sont protégées par ton mot de passe et par les règles de la base.
 7. Une fois le site republié, ouvre **Progression → Synchronisation** et connecte-toi avec l'e-mail et le mot de passe de l'étape 3. Fais de même sur chaque appareil.
 
-Ensuite, tout se synchronise automatiquement : quelques secondes après chaque modification, quand tu reviens sur l'app, et toutes les minutes. Si tu modifies des choses différentes sur deux appareils, elles sont fusionnées. Si tu modifies *le même élément* sur les deux, la modification la plus récente l'emporte.
+Ensuite, tout se synchronise automatiquement : quelques secondes après chaque modification, quand tu reviens sur l'app, quand le réseau revient, et une fois toutes les 24 heures si l'app reste ouverte. Tu peux aussi lancer une synchronisation à la main avec le bouton **Synchroniser** (Progression → Synchronisation). Si tu modifies des choses différentes sur deux appareils, elles sont fusionnées. Si tu modifies *le même élément* sur les deux, la modification la plus récente l'emporte.
+
+## Programmes
+
+Dans l'onglet **Programme** :
+
+- **Créer** un programme avec le bouton **+** : choisis un nom, ajoute des exercices, règle pour chacun le nombre de séries et de répétitions (la durée en minutes pour le cardio).
+- **Changer l'ordre** des exercices : maintiens la poignée ⠿ et glisse (au doigt ou à la souris). Au clavier, utilise les flèches haut et bas sur la poignée.
+- **Modifier** un de tes programmes : ouvre-le puis touche **Modifier**.
+- **Programmes d'Olivier** : ils ne se modifient pas directement. Touche **Dupliquer pour modifier** pour en obtenir une copie que tu peux changer librement.
+
+Modifier un programme ne change pas tes séances passées. Si tu ajoutes un exercice à une séance déjà commencée aujourd'hui, il apparaît dans la séance ; les changements de séries ou de reps s'appliquent aux séances suivantes.
 
 ## Personnaliser
 

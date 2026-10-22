@@ -4,7 +4,7 @@
 Application web mobile-first de suivi d'entraînement de musculation sur-mesure.
 Elle enregistre les séances, suit la progression sur machines et applique un programme personnalisé conçu par un coach ("Olivier"), avec ses conseils spécifiques pour chaque exercice.
 
-Utilisateur actuel : une seule personne (Thomas). Les données sont stockées **sur l'appareil** (localStorage, copie de travail qui marche hors ligne) et, si activée, **synchronisées entre appareils** via Supabase (un compte, e-mail + mot de passe).
+Utilisateur actuel : une seule personne (**Akli**, voir `USER_NAME` dans `lib/config.ts`). Les données sont stockées **sur l'appareil** (localStorage, copie de travail qui marche hors ligne) et, si activée, **synchronisées entre appareils** via Supabase (un compte, e-mail + mot de passe).
 
 ## 🛠️ Workflow de développement
 1. **Étape 1 (Réalisée) :** maquette UI générée avec **v0.dev**.
@@ -36,10 +36,10 @@ app/
   globals.css           Tous les styles + variables de thème
   icon.svg              Icône de l'app
 components/
-  app-shell.tsx         Onglets, semaine, programmes, chrono (point d'entrée client)
+  app-shell.tsx         Onglets, semaine, programmes (créer/modifier/supprimer), chrono (point d'entrée client)
   topbar.tsx · bottom-nav.tsx · rest-timer-toast.tsx · exercise-icon.tsx · sync-panel.tsx
   workout/              Séance : workout-view, day-strip, exercise-card, set-row, share-modal
-  program/program-view  Planning hebdo + création/suppression de programmes
+  program/              program-view (planning hebdo + liste des programmes) · program-form (création/édition, séries/reps, glisser-déposer)
   glossary/             glossary-view (fiches + ajout/modif/suppression) · exercise-form
   progress/progress-view  Stats calculées + export/import de sauvegarde
   ui/button.tsx         Composant shadcn (non utilisé pour l'instant)
@@ -51,7 +51,7 @@ hooks/
 lib/
   types.ts              Modèle de données
   data.ts               Catalogue des exercices + programmes d'Olivier + planning par défaut
-  workout.ts            Logique pure : brouillon de séance, volume, historique
+  workout.ts            Logique pure : brouillon de séance, volume, historique, ajout des nouveaux exercices à une séance en cours
   summary.ts            Génère le texte à envoyer au coach
   storage.ts            ⭐ SEUL accès au localStorage + normalisation/migration des sauvegardes
   merge.ts              Fusion de deux états, élément par élément (cœur de la synchro)
@@ -63,18 +63,25 @@ lib/
 
 ## 🧠 Modèle de données (`lib/types.ts`)
 - `Exercise` : fiche machine (nom, muscles, réglages, `coachTip`, `kind` = `strength` | `cardio`).
-- `Program` : liste de `PlannedExercise` (séries, reps visées, charge de départ, repos).
+- `Program` : liste ordonnée de `PlannedExercise` (séries, reps visées, charge de départ, repos). **L'ordre du tableau `items` = l'ordre des exercices dans la séance.**
 - `SessionLog` : séance réalisée un jour donné. Clé = `AAAA-MM-JJ__idProgramme`. Contient, par exercice, les séries `{weight, reps, done}`, la note de ressenti et le repos choisi.
 - `AppState` : `exercises` (catalogue complet, modifiable, copié depuis `DEFAULT_EXERCISES` au premier lancement), `customPrograms`, `assignments` (7 jours, lundi → dimanche) + `assignmentsUpdatedAt`, `sessions`.
-- Les programmes d'Olivier restent dans `lib/data.ts` (non sauvegardés). Les exercices, eux, vivent dans l'état : ils sont éditables et synchronisés.
+- Les programmes d'Olivier restent dans `lib/data.ts` (non sauvegardés, non modifiables directement). Les exercices, eux, vivent dans l'état : ils sont éditables et synchronisés.
 - **Catalogue :** `getExercise(id)` (lib/data.ts) lit un registre mis à jour par `setCatalog(state.exercises)` à chaque rendu de `AppShell`. La logique pure (volume, résumé, historique) l'utilise sans recevoir le catalogue en paramètre.
+
+## 🧩 Programmes (création, modification, ordre)
+- **Programmes d'Olivier** (`lib/data.ts`) : lecture seule. Le bouton « Dupliquer pour modifier » en crée une copie (`custom-…`, nom « … (copie) ») qui s'ouvre directement en édition.
+- **Programmes personnalisés** (id commençant par `custom-`, voir `isCustomProgram`) : modifiables et supprimables via `ProgramForm`. `AppShell` expose `createProgram`, `updateProgram` (met `updatedAt`) et `deleteProgram` (pierre tombale).
+- **`ProgramForm`** sert à créer **et** à modifier. Pour chaque exercice : séries et reps (durée en minutes pour le cardio). Les champs sont gardés en texte pendant la saisie puis bornés à l'enregistrement (séries 1–10, reps 1–100, cardio 1–180 min). Les `startWeight` et `restSeconds` existants sont conservés ; un exercice ajouté prend 3 × 10, repos 60 s (cardio : 1 série, repos 0).
+- **Changer l'ordre :** poignée ⠿ (`.drag-handle`) avec *pointer events* (aucune dépendance), donc au doigt et à la souris. Au clavier : flèches haut/bas sur la poignée. La poignée doit garder `touch-action: none`, sinon la page défile au lieu de glisser.
+- **Séance du jour déjà commencée :** si on ajoute des exercices au programme, `withNewExercises` (lib/workout.ts) les ajoute à la séance enregistrée. Les modifications de séries/reps ne s'appliquent qu'aux séances suivantes (les séances passées ne changent jamais).
 
 ## 🔄 Règles de synchronisation (à respecter à chaque nouvelle fonctionnalité)
 - **Toute modification d'un exercice, programme ou séance doit mettre à jour `updatedAt`** (`Date.now()`), y compris le planning (`assignmentsUpdatedAt`). C'est ce qui décide quelle version gagne à la fusion.
 - **Ne jamais retirer un élément d'un tableau pour le supprimer** : on le marque `deleted: true` + `updatedAt` (« pierre tombale »). Sinon l'autre appareil le ressuscite. Les listes affichées filtrent `!deleted` ; l'historique des séances garde l'accès aux exercices supprimés via `getExercise`.
 - Fusion par élément : le plus récent gagne, à égalité choix déterministe. `mergeStates` doit rester commutatif et idempotent (testé).
 - L'état entier est stocké en un seul JSON dans la table `app_state` (une ligne par utilisateur, numéro de version pour détecter les écritures simultanées). Si les données grossissent trop, passer à une table par type d'élément.
-- Déclencheurs : 2 s après une modification, retour sur l'app, retour du réseau, toutes les minutes. La synchro est facultative : sans configuration l'app reste 100 % locale.
+- Déclencheurs : 2 s après une modification (`DEBOUNCE_MS`), retour sur l'app, retour du réseau, et vérification périodique **toutes les 24 h** (`POLL_MS = 86_400_000` dans `hooks/use-sync.ts`, valeur choisie volontairement). La synchro est facultative : sans configuration l'app reste 100 % locale.
 
 ## ⚙️ Comportements clés (à ne pas casser)
 - **Validation rapide :** bouton ✓ de 44 px. Valider une série lance le chrono avec le repos de l'exercice (préréglages 0:30 / 1:00 / 1:30 / 2:00), **sauf** pour le cardio (repos = 0) et pour la **toute dernière série** de la séance.
@@ -90,7 +97,7 @@ lib/
 - **React :** les fonctions passées à `setState(fn)` doivent rester pures (pas d'appel à un autre `setState` ni à un callback parent dedans).
 - **Hydratation :** l'état local n'est lu qu'après montage (`ready` dans `use-app-state`). Ne pas afficher de dates ou de données locales avant.
 - **Mobile à la salle :** cibles tactiles ≥ 44 px ; champs de saisie à **16 px minimum** (sinon iOS zoome) ; `inputMode="decimal"` / `"numeric"`.
-- **Styles :** ajouter des classes dans `globals.css` en réutilisant les variables (`--primary`, `--amber`…). Pas de nouvelles dépendances sans en discuter.
+- **Styles :** ajouter des classes dans `globals.css` en réutilisant les variables (`--primary`, `--amber`…). Pas de nouvelles dépendances sans en discuter (le glisser-déposer des programmes est fait à la main, sans bibliothèque).
 - **Site statique obligatoire :** pas d'API routes, de Server Actions, de middleware ni de rendu dynamique côté serveur (ils casseraient l'export GitHub Pages et le futur Capacitor). Le workflow définit `BASE_PATH=/nom-du-depot` ; en local il est vide. Pour les liens et images, rester sur les composants/chemins Next (le `basePath` est géré automatiquement).
 - **Avant de livrer :** `pnpm typecheck` et `pnpm build` doivent passer. `ignoreBuildErrors` a été retiré volontairement.
 
@@ -99,15 +106,18 @@ lib/
 - **Accents :** vert électrique `#c4f34a` pour validation/succès ; ambre `#e3ad54` pour les « Conseils d'Olivier ». Bleu et violet pour distinguer les programmes.
 - **UX :** mobile-first, boutons larges utilisables d'une seule main.
 
-## 🔑 Fichier personnel de l'utilisateur
-`lib/supabase-config.ts` contient l'URL et la clé publique Supabase de l'utilisateur, saisies par lui sur GitHub. **Ne pas le remplacer ni l'inclure dans une mise à jour** (sauf demande explicite) : cela couperait la synchronisation. Idem pour `lib/config.ts` (prénom) s'il l'a modifié.
+## 🔑 Fichiers personnels de l'utilisateur
+- `lib/supabase-config.ts` contient l'URL et la clé publique Supabase de l'utilisateur, saisies par lui sur GitHub. **Ne pas le remplacer ni l'inclure dans une mise à jour** (sauf demande explicite) : cela couperait la synchronisation.
+- `lib/config.ts` : le prénom est **`USER_NAME = 'Akli'`** (valeur confirmée par l'utilisateur). Ne pas le remplacer ni l'écraser dans une mise à jour.
+- `hooks/use-sync.ts` : **`POLL_MS = 86_400_000`** (24 h) est une valeur voulue par l'utilisateur. La conserver lors de toute modification de ce fichier. Le commentaire du fichier et le README indiquent bien « toutes les 24 heures ».
 
 ## ✍️ Contenus à remplacer par Olivier
-Dans `lib/data.ts` : les **réglages machines**, les **conseils** (`coachTip`) des exercices hors jambes, les **charges de départ** (`startWeight`) et la composition des programmes Push/Pull sont des exemples. À faire valider par Olivier. Le prénom et le nom du coach sont dans `lib/config.ts`.
+Dans `lib/data.ts` : les **réglages machines**, les **conseils** (`coachTip`) des exercices hors jambes, les **charges de départ** (`startWeight`) et la composition des programmes Push/Pull sont des exemples. À faire valider par Olivier. Le nom du coach est dans `lib/config.ts`.
 
 ## 🗺️ Feuille de route
 - [ ] Tester à la salle et corriger l'ergonomie.
-- [ ] Éditer un programme existant (séries, reps, ordre).
+- [x] Éditer un programme existant (séries, reps, ordre) : fait via `ProgramForm` ; les programmes d'Olivier se dupliquent pour être modifiés.
+- [ ] Modifier la charge de départ et le temps de repos de chaque exercice depuis le formulaire de programme.
 - [ ] Courbe de progression par exercice (meilleure charge dans le temps).
 - [ ] Empêcher la mise en veille de l'écran pendant une séance (Wake Lock API).
 - [ ] Ajouter des tests automatisés (Vitest + Testing Library) ; le flux validation → chrono → sauvegarde → résumé a été vérifié ainsi en local mais les tests ne sont pas dans le dépôt.
@@ -117,6 +127,7 @@ Dans `lib/data.ts` : les **réglages machines**, les **conseils** (`coachTip`) d
 
 ## ⚠️ Limites connues
 - Sans synchronisation, les données restent sur l'appareil : effacer les données du navigateur les supprime. Avec la synchronisation, le cloud sert de copie. L'onglet **Progression** permet aussi d'exporter/restaurer un fichier JSON.
-- Synchronisation : pas de temps réel (vérification au retour sur l'app et toutes les minutes). Supprimer un exercice utilisé dans un programme le fait disparaître de ce programme (les séances passées le gardent). Les projets Supabase gratuits peuvent être mis en pause après une période d'inactivité.
+- Synchronisation : pas de temps réel (vérification 2 s après une modification, au retour sur l'app / du réseau, et toutes les 24 h). Supprimer un exercice utilisé dans un programme le fait disparaître de ce programme (les séances passées le gardent). Les projets Supabase gratuits peuvent être mis en pause après une période d'inactivité.
+- Modifier un programme ne change pas les séances déjà enregistrées : seuls les exercices ajoutés apparaissent dans une séance du jour déjà commencée (les exercices retirés ou les séries modifiées y restent tels quels).
 - Le son et la vibration du chrono ne fonctionnent que si l'app est au premier plan (la vibration n'existe pas sur iOS Safari).
 - La semaine affichée est calculée au chargement ; si l'app reste ouverte après minuit, recharger la page.
