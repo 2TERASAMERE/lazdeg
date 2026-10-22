@@ -58,6 +58,14 @@ export function AppShell() {
   const createProgram = (program: Program) =>
     update((s) => ({ ...s, customPrograms: [...s.customPrograms, { ...program, updatedAt: Date.now() }] }))
 
+  const updateProgram = (program: Program) =>
+    update((s) => ({
+      ...s,
+      customPrograms: s.customPrograms.map((p) =>
+        p.id === program.id ? { ...program, updatedAt: Date.now() } : p,
+      ),
+    }))
+
   const deleteProgram = (programId: string) =>
     update((s) => ({
       ...s,
@@ -114,6 +122,7 @@ export function AppShell() {
           assignments={state.assignments}
           onAssign={assign}
           onCreate={createProgram}
+          onUpdate={updateProgram}
           onDelete={deleteProgram}
         />
       )}
