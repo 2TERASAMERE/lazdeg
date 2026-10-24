@@ -87,7 +87,15 @@ export function useWorkout({ state, update, program, date }: Options) {
     [patch],
   )
 
-  const finish = useCallback(() => patch((s) => ({ ...s, finishedAt: Date.now() })), [patch])
+    const finish = useCallback(
+    () =>
+      patch((s) => {
+        if (!program) return s
+        const finished = { ...s, finishedAt: Date.now() }
+        return { ...finished, summary: buildSummary(finished, program) }
+      }),
+    [patch, program],
+  )
 
   return { session, lastSession, setField, toggleSet, setNote, setRestSeconds, finish }
 }
