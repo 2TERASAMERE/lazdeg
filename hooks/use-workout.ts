@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
+import { buildSummary } from '@/lib/summary'
 import type { AppState, Program, SessionLog } from '@/lib/types'
 import {
   buildDraftSession,
