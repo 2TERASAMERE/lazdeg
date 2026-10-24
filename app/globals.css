@@ -1583,3 +1583,26 @@ button.glossary-card {
 .program-details .glossary-actions {
   margin-top: 12px;
 }
+/* Note de ressenti multiligne */
+.note-wrap textarea {
+  width: 100%;
+  min-height: 64px;
+  max-height: 200px;
+  padding: 9px 10px;
+  border: 1px solid #303731;
+  border-radius: 6px;
+  outline: none;
+  background: #181c19;
+  color: #dce1dd;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+  resize: vertical;
+  field-sizing: content; /* grandit tout seul quand le navigateur le supporte */
+}
+.note-wrap textarea::placeholder {
+  color: #59625c;
+}
+.note-wrap textarea:focus {
+  border-color: #789343;
+}
