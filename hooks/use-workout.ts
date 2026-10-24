@@ -87,7 +87,8 @@ export function useWorkout({ state, update, program, date }: Options) {
     [patch],
   )
 
-    const finish = useCallback(
+  // Terminer : on fige le résumé texte dans la séance, pour l'historique (Progression).
+  const finish = useCallback(
     () =>
       patch((s) => {
         if (!program) return s
