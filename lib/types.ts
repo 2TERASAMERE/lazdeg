@@ -45,7 +45,11 @@ export interface Program {
   items: PlannedExercise[]
   updatedAt?: number
     /** Résumé texte figé à la fin de la séance (affiché dans l'historique de Progression). */
+  /** Dernière modification (ms), pour la synchronisation. */
+  updatedAt?: number
+  /** Résumé texte figé à la fin de la séance (affiché dans l'historique de Progression). */
   summary?: string
+  exercises: Record<string, ExerciseLog>
   deleted?: boolean
 }
 
