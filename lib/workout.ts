@@ -24,7 +24,9 @@ export function findLastSession(
 
 /**
  * Crée une séance vierge pour un programme.
- * Poids et reps sont pré-remplis depuis la séance précédente, sinon depuis les valeurs de départ du programme.
+ * Le poids est pré-rempli depuis la séance précédente, sinon depuis la charge de départ du programme.
+ * Les répétitions viennent toujours de la cible du programme : ainsi, modifier les reps d'un programme
+ * est pris en compte dès la séance suivante (la ligne « Dernière séance » rappelle ce qui a été fait).
  */
 export function buildDraftSession(program: Program, date: string, last?: SessionLog): SessionLog {
   const exercises: Record<string, ExerciseLog> = {}
@@ -38,7 +40,7 @@ export function buildDraftSession(program: Program, date: string, last?: Session
         exercise.kind === 'cardio'
           ? ''
           : (reference?.weight ?? (item.startWeight !== undefined ? String(item.startWeight) : ''))
-      return { weight, reps: reference?.reps ?? String(item.target), done: false }
+      return { weight, reps: String(item.target), done: false }
     })
     exercises[item.exerciseId] = { sets, note: '', restSeconds: prev?.restSeconds ?? item.restSeconds }
   }
