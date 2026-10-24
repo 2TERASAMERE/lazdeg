@@ -109,14 +109,15 @@ export function ExerciseCard({
           </div>
 
           <label className="note-wrap">
-            <span>Note de ressenti</span>
-            <input
-              value={log.note}
-              onChange={(e) => onNote(e.target.value)}
-              placeholder="Comment tu te sens sur cet exercice ?"
-              autoComplete="off"
-            />
-          </label>
+  <span>Note de ressenti</span>
+  <textarea
+    value={log.note}
+    onChange={(e) => onNote(e.target.value)}
+    placeholder="Comment tu te sens sur cet exercice ?"
+    rows={2}
+    autoComplete="off"
+  />
+</label>
         </div>
       )}
     </article>
