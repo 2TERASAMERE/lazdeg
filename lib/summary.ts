@@ -3,16 +3,15 @@ import { capitalize, formatLongDate } from './dates'
 import { getExercise } from './data'
 import { formatNumber, formatWeight, parseNumber } from './format'
 import type { Program, SessionLog } from './types'
-import { countSets, sessionVolume } from './workout'
+import { countSets, sessionDurationMinutes, sessionVolume } from './workout'
 
 /** Résumé texte prêt à coller dans WhatsApp, SMS ou un e-mail. */
 export function buildSummary(session: SessionLog, program: Program): string {
   const { done, total } = countSets(session)
   const lines: string[] = []
 
-  const minutes = session.finishedAt
-    ? Math.max(1, Math.round((session.finishedAt - session.startedAt) / 60000))
-    : null
+  // Durée = de la première à la dernière série validée, + 1 minute.
+  const minutes = sessionDurationMinutes(session)
   lines.push(`Salut ${COACH_NAME}, voici ma séance : ${program.name}`)
   lines.push(`${capitalize(formatLongDate(session.date))}${minutes ? ` · ${minutes} min` : ''}`)
   lines.push('')
