@@ -380,7 +380,7 @@ button {
 .sets-head,
 .set-row {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) 22px minmax(0, 1fr) 44px;
+  grid-template-columns: 26px minmax(0, 1fr) 22px minmax(0, 1.7fr) 44px;
   align-items: center;
   gap: 6px;
 }
@@ -459,18 +459,25 @@ button {
   color: #8d978e;
   font-size: 10px;
 }
-.note-wrap input {
+.note-wrap textarea {
   width: 100%;
+  min-height: 64px;
   padding: 9px 10px;
   border: 1px solid #303731;
   border-radius: 6px;
   outline: none;
   background: #181c19;
   color: #dce1dd;
-  font-size: 11px;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+  resize: vertical;
 }
-.note-wrap input::placeholder {
+.note-wrap textarea::placeholder {
   color: #59625c;
+}
+.note-wrap textarea:focus {
+  border-color: #789343;
 }
 .finish-button {
   width: 100%;
@@ -1383,10 +1390,6 @@ button.glossary-card {
 .create-program-card label input {
   font-size: 16px;
 }
-.note-wrap input {
-  min-height: 44px;
-  font-size: 16px;
-}
 
 /* ───────── Données (sauvegarde) ───────── */
 .data-actions {
@@ -1583,26 +1586,28 @@ button.glossary-card {
 .program-details .glossary-actions {
   margin-top: 12px;
 }
-/* Note de ressenti multiligne */
-.note-wrap textarea {
-  width: 100%;
-  min-height: 64px;
-  max-height: 200px;
-  padding: 9px 10px;
-  border: 1px solid #303731;
-  border-radius: 6px;
-  outline: none;
-  background: #181c19;
-  color: #dce1dd;
-  font: inherit;
-  font-size: 16px;
-  line-height: 1.4;
-  resize: vertical;
-  field-sizing: content; /* grandit tout seul quand le navigateur le supporte */
+
+/* ───────── Séance : boutons +/− sur les répétitions ───────── */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
 }
-.note-wrap textarea::placeholder {
-  color: #59625c;
+.stepper .set-input {
+  padding: 0 2px;
 }
-.note-wrap textarea:focus {
-  border-color: #789343;
+.step-button {
+  width: 32px;
+  height: 44px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid #39403a;
+  border-radius: 5px;
+  background: #1d211e;
+  color: #a9b8a6;
+}
+.step-button:disabled {
+  opacity: 0.35;
 }
