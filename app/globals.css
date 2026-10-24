@@ -1611,3 +1611,34 @@ button.glossary-card {
 .step-button:disabled {
   opacity: 0.35;
 }
+/* ───────── Progression : historique des séances ───────── */
+.history-select-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+.history-select-label span {
+  color: #8d978e;
+  font-size: 10px;
+  font-weight: 700;
+}
+.history-select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid #465340;
+  border-radius: 7px;
+  outline: none;
+  background: #151a16;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 16px;
+}
+.history-select:focus {
+  border-color: var(--primary);
+}
+.history-summary {
+  max-height: 340px;
+  margin: 12px 0 0;
+}
