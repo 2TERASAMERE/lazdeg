@@ -44,6 +44,8 @@ export interface Program {
   durationMin: number
   items: PlannedExercise[]
   updatedAt?: number
+    /** Résumé texte figé à la fin de la séance (affiché dans l'historique de Progression). */
+  summary?: string
   deleted?: boolean
 }
 
