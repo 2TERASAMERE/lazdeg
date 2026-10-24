@@ -7,7 +7,7 @@ import { formatShortDate } from '@/lib/dates'
 import { formatNumber, pluralize } from '@/lib/format'
 import type { Program, SessionLog } from '@/lib/types'
 import { countSets, sessionVolume } from '@/lib/workout'
-** Mettre à true pour réactiver le bouton WhatsApp. */
+/** Mettre à true pour réactiver le bouton WhatsApp. */
 const WHATSAPP_ENABLED = false
 
 interface Props {
