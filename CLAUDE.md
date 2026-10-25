@@ -94,7 +94,7 @@ lib/
 - **Brouillon :** une séance n'est enregistrée (et ne compte dans la progression) qu'à partir de la première modification.
 - **Durée de séance :** `sessionDurationMinutes()` (lib/workout.ts) = temps entre la validation de la première et de la dernière série (`doneAt`) **+ 1 minute**. Pas de durée si aucune série validée n'a d'horodatage.
 - **Partage :** `buildSummary()` produit le texte ; partage natif et copie. Le bouton WhatsApp (`wa.me`) est **désactivé** (`WHATSAPP_ENABLED = false` dans `share-modal.tsx`) : le code est conservé, remettre `true` pour le réactiver.
-- **Historique des séances :** « Terminer & partager » fige le texte dans `session.summary` (via `finish` dans `use-workout.ts`). L'onglet Progression → *Historique des séances* (`session-history.tsx`) liste les séances ayant un `summary` (plus récentes d'abord) dans une liste déroulante et affiche le résumé dans un encadré, avec un bouton Copier. Rappuyer sur « Revoir le résumé & partager » régénère le résumé.
+- **Historique des séances :** « Terminer & partager » fige le texte dans `session.summary` (via `finish` dans `use-workout.ts`). L'onglet Progression → *Historique des séances* (`session-history.tsx`) liste les séances ayant un `summary` (plus récentes d'abord) dans une liste déroulante et affiche le résumé dans un encadré, avec un bouton Copier. Rappuyer sur « Terminer, sauvegarder & partager » régénère le résumé.
 
 ## 📏 Conventions
 - Interface et textes **en français**. Sentence case.
@@ -140,6 +140,6 @@ Dans `lib/data.ts` : les **réglages machines**, les **conseils** (`coachTip`) d
 - Sans synchronisation, les données restent sur l'appareil : effacer les données du navigateur les supprime. Avec la synchronisation, le cloud sert de copie. L'onglet **Progression** permet aussi d'exporter/restaurer un fichier JSON.
 - Synchronisation : pas de temps réel (vérification 2 s après une modification, au retour sur l'app / du réseau, et toutes les 24 h). Supprimer un exercice utilisé dans un programme le fait disparaître de ce programme (les séances passées le gardent). Les projets Supabase gratuits peuvent être mis en pause après une période d'inactivité.
 - Modifier un programme ne change pas les séances déjà enregistrées : seuls les exercices ajoutés apparaissent dans une séance du jour déjà commencée (les exercices retirés ou les séries/reps modifiées y restent tels quels). Les reps modifiées ne se voient donc que sur une séance neuve (autre jour, ou séance du jour pas encore touchée).
-- Historique des séances : seules les séances terminées après l'ajout de `summary` y apparaissent (les anciennes n'ont pas de résumé). Le résumé est figé : si tu modifies une série après avoir terminé, rappuie sur « Revoir le résumé & partager » pour le mettre à jour.
+- Historique des séances : seules les séances terminées après l'ajout de `summary` y apparaissent (les anciennes n'ont pas de résumé). Le résumé est figé : si tu modifies une série après avoir terminé, rappuie sur « Terminer, sauvegarder & partager » pour le mettre à jour.
 - Le son et la vibration du chrono ne fonctionnent que si l'app est au premier plan (la vibration n'existe pas sur iOS Safari).
 - La semaine affichée est calculée au chargement ; si l'app reste ouverte après minuit, recharger la page.
