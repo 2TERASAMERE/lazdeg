@@ -176,7 +176,7 @@ export function WorkoutView({
 
           <button type="button" className="finish-button" onClick={handleFinish} disabled={counts.done === 0}>
             <Share2 size={17} />{' '}
-            {session.finishedAt ? 'Revoir le résumé & partager' : 'Terminer & partager la séance'}
+            {session.finishedAt ? 'Terminer, sauvegarder & partager' : 'Terminer & partager la séance'}
           </button>
           <p className="save-note">
             <Check size={13} /> Enregistré automatiquement sur cet appareil
