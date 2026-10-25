@@ -7,6 +7,7 @@ import { formatCompact, formatNumber } from '@/lib/format'
 import { exportState, parseImportedState } from '@/lib/storage'
 import type { AppState } from '@/lib/types'
 import { hasProgress, sessionVolume } from '@/lib/workout'
+import { SessionHistory } from './session-history'
 
 interface Props {
   /** Contenu affiché avant la sauvegarde (panneau de synchronisation). */
@@ -162,6 +163,8 @@ export function ProgressView({ children, state, todayIso, onImport }: Props) {
               </div>
             ))}
           </div>
+
+          <SessionHistory sessions={state.sessions} />
         </>
       )}
 
