@@ -7,6 +7,7 @@ import { formatShortDate } from '@/lib/dates'
 import { formatNumber, pluralize } from '@/lib/format'
 import type { Program, SessionLog } from '@/lib/types'
 import { countSets, sessionVolume } from '@/lib/workout'
+
 /** Mettre à true pour réactiver le bouton WhatsApp. */
 const WHATSAPP_ENABLED = false
 
@@ -91,15 +92,15 @@ export function ShareModal({ program, session, summary, onClose }: Props) {
 
         <div className="share-actions">
           {WHATSAPP_ENABLED && (
-  <a
-    className="finish-button"
-    href={`https://wa.me/?text=${encodeURIComponent(summary)}`}
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    <MessageCircle size={17} /> Envoyer sur WhatsApp
-  </a>
-)}
+            <a
+              className="finish-button"
+              href={`https://wa.me/?text=${encodeURIComponent(summary)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MessageCircle size={17} /> Envoyer sur WhatsApp
+            </a>
+          )}
           {canShare && (
             <button type="button" className="secondary-button" onClick={nativeShare}>
               <Share2 size={16} /> Partager…
