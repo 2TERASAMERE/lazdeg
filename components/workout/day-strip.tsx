@@ -11,10 +11,14 @@ interface Props {
 }
 
 export function DayStrip({ week, todayIso, selected, assignments, programs, onSelect }: Props) {
+  // Seuls les jours avec un programme assigné sont affichés (jours de repos masqués).
+  const planned = week
+    .map((day) => ({ day, program: programs.find((p) => p.id === assignments[day.index]) }))
+    .filter((entry) => !!entry.program)
+
   return (
     <div className="day-strip">
-      {week.map((day) => {
-        const program = programs.find((p) => p.id === assignments[day.index])
+      {planned.map(({ day, program }) => {
         const classes = [
           'day-card',
           selected === day.index ? 'selected' : '',
