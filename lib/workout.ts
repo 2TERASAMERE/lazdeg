@@ -22,33 +22,37 @@ export function findLastSession(
     .sort((a, b) => b.date.localeCompare(a.date) || b.startedAt - a.startedAt)[0]
 }
 
-/** Poids de la dernière série validée (la plus récente) d'un exercice, ou undefined s'il n'y en a pas. */
-function lastDoneWeight(log: ExerciseLog | undefined): string | undefined {
-  const done = (log?.sets ?? []).filter((s) => s.done && parseNumber(s.weight) > 0)
+/** Série validée la plus récente d'un exercice, ou undefined s'il n'y en a pas. */
+function lastDoneSet(log: ExerciseLog | undefined): SetLog | undefined {
+  const done = (log?.sets ?? []).filter((s) => s.done)
   if (done.length === 0) return undefined
-  return done.reduce((a, b) => ((b.doneAt ?? 0) >= (a.doneAt ?? 0) ? b : a)).weight
+  return done.reduce((a, b) => ((b.doneAt ?? 0) >= (a.doneAt ?? 0) ? b : a))
 }
 
 /**
  * Crée une séance vierge pour un programme.
- * Le poids de toutes les séries d'un exercice est pré-rempli avec celui de la dernière série validée
- * la dernière fois, sinon avec la charge de départ du programme.
- * Les répétitions viennent toujours de la cible du programme : ainsi, modifier les reps d'un programme
- * est pris en compte dès la séance suivante (la ligne « Dernière séance » rappelle ce qui a été fait).
+ * Pré-remplissage série par série avec la dernière séance du même programme :
+ * - la série n° i reprend le poids et les reps de la série n° i d'avant, si elle était validée ;
+ * - sinon (série non validée, ou série en plus dans le programme), elle reprend la dernière série validée ;
+ * - sans historique pour l'exercice : charge de départ du programme et reps cibles.
  */
 export function buildDraftSession(program: Program, date: string, last?: SessionLog): SessionLog {
   const exercises: Record<string, ExerciseLog> = {}
   for (const item of program.items) {
     const exercise = getExercise(item.exerciseId)
     if (!exercise || exercise.deleted) continue
+    const cardio = exercise.kind === 'cardio'
     const prev = last?.exercises[item.exerciseId]
-    const startWeight =
-      lastDoneWeight(prev) ?? (item.startWeight !== undefined ? String(item.startWeight) : '')
-    const sets: SetLog[] = Array.from({ length: item.sets }, () => ({
-      weight: exercise.kind === 'cardio' ? '' : startWeight,
-      reps: String(item.target),
-      done: false,
-    }))
+    const fallback = lastDoneSet(prev)
+    const startWeight = item.startWeight !== undefined ? String(item.startWeight) : ''
+
+    const sets: SetLog[] = Array.from({ length: item.sets }, (_, i) => {
+      const same = prev?.sets[i]
+      const ref = same?.done ? same : fallback
+      const weight = cardio ? '' : ref && parseNumber(ref.weight) > 0 ? ref.weight : startWeight
+      const reps = ref && ref.reps.trim() !== '' ? ref.reps : String(item.target)
+      return { weight, reps, done: false }
+    })
     exercises[item.exerciseId] = { sets, note: '', restSeconds: prev?.restSeconds ?? item.restSeconds }
   }
   return {
