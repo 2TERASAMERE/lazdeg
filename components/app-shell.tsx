@@ -29,13 +29,20 @@ export function AppShell() {
 
   const week = useMemo(() => getWeek(today), [today])
   const todayIso = toISODate(today)
-  const selectedDay = pickedDay ?? weekdayIndex(today)
   const exercises = useMemo(() => state.exercises.filter((e) => !e.deleted), [state.exercises])
   const programs = useMemo(
     () => [...DEFAULT_PROGRAMS, ...state.customPrograms.filter((p) => !p.deleted)],
     [state.customPrograms],
   )
-
+    // Jour affiché : aujourd'hui s'il est programmé, sinon le prochain jour programmé, sinon le dernier.
+  const plannedDays = week
+    .filter((d) => programs.some((p) => p.id === state.assignments[d.index]))
+    .map((d) => d.index)
+  const todayIndex = weekdayIndex(today)
+  const defaultDay = plannedDays.includes(todayIndex)
+    ? todayIndex
+    : (plannedDays.find((i) => i > todayIndex) ?? plannedDays[plannedDays.length - 1] ?? todayIndex)
+  const selectedDay = pickedDay !== null && plannedDays.includes(pickedDay) ? pickedDay : defaultDay
   // Avant le chargement des données locales, on n'affiche que l'en-tête (évite tout écart serveur / client).
   if (!ready) {
     return (
