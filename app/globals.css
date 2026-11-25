@@ -1645,3 +1645,14 @@ button.glossary-card {
   max-height: 340px;
   margin: 12px 0 0;
 }
+/* ───────── Séance : bande des jours (jours programmés uniquement) ───────── */
+.day-strip {
+  display: flex;
+  grid-template-columns: none;
+  gap: 5px;
+}
+.day-card {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 96px;
+}
