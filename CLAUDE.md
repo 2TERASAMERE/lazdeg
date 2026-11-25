@@ -38,7 +38,7 @@ app/
 components/
   app-shell.tsx         Onglets, semaine, programmes (créer/modifier/supprimer), chrono (point d'entrée client)
   topbar.tsx · bottom-nav.tsx · rest-timer-toast.tsx · exercise-icon.tsx · sync-panel.tsx
-  workout/              Séance : workout-view, day-strip, exercise-card, set-row (saisie + boutons +/− sur les reps), share-modal (bouton WhatsApp désactivé)
+  workout/              Séance : workout-view, day-strip, exercise-card, set-row (saisie + boutons −/+ de part et d'autre des reps), share-modal (bouton WhatsApp désactivé)
   program/              program-view (planning hebdo + liste des programmes) · program-form (création/édition, séries/reps, glisser-déposer)
   glossary/             glossary-view (fiches + ajout/modif/suppression) · exercise-form
   progress/             progress-view (stats + export/import de sauvegarde) · session-history (liste déroulante des séances terminées + résumé copiable)
@@ -51,7 +51,7 @@ hooks/
 lib/
   types.ts              Modèle de données
   data.ts               Catalogue des exercices + programmes d'Olivier + planning par défaut
-  workout.ts            Logique pure : brouillon de séance, volume, durée de séance, historique, ajout des nouveaux exercices à une séance en cours
+  workout.ts            Logique pure : brouillon de séance (pré-remplissage), volume, durée de séance, historique, ajout des nouveaux exercices à une séance en cours
   summary.ts            Génère le texte de résumé (partage + historique)
   storage.ts            ⭐ SEUL accès au localStorage + normalisation/migration des sauvegardes
   merge.ts              Fusion de deux états, élément par élément (cœur de la synchro)
@@ -75,7 +75,7 @@ lib/
 - **`ProgramForm`** sert à créer **et** à modifier. Pour chaque exercice : séries et reps (durée en minutes pour le cardio). Les champs sont gardés en texte pendant la saisie puis bornés à l'enregistrement (séries 1–10, reps 1–100, cardio 1–180 min). Les `startWeight` et `restSeconds` existants sont conservés ; un exercice ajouté prend 3 × 10, repos 60 s (cardio : 1 série, repos 0).
 - **Changer l'ordre :** poignée ⠿ (`.drag-handle`) avec *pointer events* (aucune dépendance), donc au doigt et à la souris. Au clavier : flèches haut/bas sur la poignée. La poignée doit garder `touch-action: none`, sinon la page défile au lieu de glisser.
 - **Séance du jour déjà commencée :** si on ajoute des exercices au programme, `withNewExercises` (lib/workout.ts) les ajoute à la séance enregistrée. Les modifications de séries/reps ne s'appliquent qu'aux séances suivantes (les séances passées ne changent jamais).
-- **Reps d'une nouvelle séance :** `buildDraftSession` (lib/workout.ts) prend **toujours** les reps dans la cible du programme (`item.target`). Seul le **poids** est repris de l'historique : celui de la **dernière série validée** (la plus récente, via `doneAt`) de la séance précédente du même programme, appliqué à **toutes** les séries de l'exercice (sinon `startWeight`). Ne pas réintroduire le pré-remplissage des reps depuis l'historique : il masquait les modifications faites dans le programme.
+- **Pré-remplissage d'une nouvelle séance :** `buildDraftSession` (lib/workout.ts) reprend **série par série** le poids **et** les reps de la dernière séance du même programme : la série n° i reprend la série n° i si elle était validée, sinon la dernière série validée (`doneAt`) de l'exercice. Sans historique : `startWeight` et reps cibles du programme (`item.target`). Demandé par l'utilisateur pour voir d'un coup d'œil ce qui a été fait. Conséquence : modifier les reps d'un programme n'est visible que sur un exercice sans historique ; le changement du **nombre de séries** est, lui, toujours pris en compte.
 
 ## 🔄 Règles de synchronisation (à respecter à chaque nouvelle fonctionnalité)
 - **Toute modification d'un exercice, programme ou séance doit mettre à jour `updatedAt`** (`Date.now()`), y compris le planning (`assignmentsUpdatedAt`). C'est ce qui décide quelle version gagne à la fusion.
@@ -86,11 +86,11 @@ lib/
 
 ## ⚙️ Comportements clés (à ne pas casser)
 - **Validation rapide :** bouton ✓ de 44 px. Valider une série lance le chrono avec le repos de l'exercice (préréglages 0:30 / 1:00 / 1:30 / 2:00), **sauf** pour le cardio (repos = 0) et pour la **toute dernière série** de la séance.
-- **Saisie des reps :** chaque série a un champ texte (clavier numérique) suivi de deux boutons **−** / **+** collés l'un à l'autre, dans cet ordre : champ, −, + (`.stepper` dans `set-row.tsx`). Les boutons partent de la valeur saisie (vide = 0), ne descendent jamais sous 0 et passent par `onChange('reps', …)`, donc par `setField` qui filtre déjà les caractères. Même fonctionnement pour la durée du cardio. La colonne des reps est plus large que celle du poids (`1.7fr`) pour loger les boutons.
+- **Saisie des reps :** chaque série a un champ texte (clavier numérique) **entouré de deux boutons** : **−** à gauche, **+** à droite (`.stepper` dans `set-row.tsx`, ordre : −, champ, +). Les boutons partent de la valeur saisie (vide = 0), ne descendent jamais sous 0 et passent par `onChange('reps', …)`, donc par `setField` qui filtre déjà les caractères. Même fonctionnement pour la durée du cardio. Le champ prend la place restante (`flex: 1 1 0`). La colonne des reps est plus large que celle du poids (`1.7fr`) pour loger les boutons.
 - **Note de ressenti :** `<textarea>` (2 lignes minimum, redimensionnable) : Entrée = retour à la ligne. Les retours à la ligne sont conservés dans le résumé envoyé au coach.
 - **Enchaînement :** quand un exercice est terminé, le suivant s'ouvre automatiquement.
 - **Chrono :** basé sur l'heure de fin (`endsAt`), pas sur un compteur : reste juste si l'écran se verrouille. Boutons −15 s / +15 s / Passer. Fin = vibration + 3 bips.
-- **Historique :** « Dernière séance » = meilleure série validée de la séance précédente **du même programme**. Le **poids** de toutes les séries d'un exercice est pré-rempli avec celui de la **dernière série validée** de cette séance (sinon `startWeight`) ; les **reps** viennent de la cible du programme.
+- **Historique :** « Dernière séance » = meilleure série validée de la séance précédente **du même programme**. Le **poids et les reps** de chaque série sont pré-remplis avec ceux de la série correspondante de cette séance (voir « Pré-remplissage d'une nouvelle séance »).
 - **Brouillon :** une séance n'est enregistrée (et ne compte dans la progression) qu'à partir de la première modification.
 - **Durée de séance :** `sessionDurationMinutes()` (lib/workout.ts) = temps entre la validation de la première et de la dernière série (`doneAt`) **+ 1 minute**. Pas de durée si aucune série validée n'a d'horodatage.
 - **Partage :** `buildSummary()` produit le texte ; partage natif et copie. Le bouton WhatsApp (`wa.me`) est **désactivé** (`WHATSAPP_ENABLED = false` dans `share-modal.tsx`) : le code est conservé, remettre `true` pour le réactiver.
@@ -101,7 +101,7 @@ lib/
 - **Données :** ne jamais appeler `localStorage` en dehors de `lib/storage.ts`, ni Supabase en dehors de `lib/supabase-client.ts`. Tout nouveau champ de l'état doit être géré dans `normalizeState` (valeur par défaut pour les anciennes sauvegardes) et dans `mergeStates`.
 - **React :** les fonctions passées à `setState(fn)` doivent rester pures (pas d'appel à un autre `setState` ni à un callback parent dedans).
 - **Hydratation :** l'état local n'est lu qu'après montage (`ready` dans `use-app-state`). Ne pas afficher de dates ou de données locales avant.
-- **Mobile à la salle :** cibles tactiles ≥ 44 px de haut (les boutons +/− font 32 px de large pour 44 px de haut, faute de place) ; champs de saisie à **16 px minimum** (sinon iOS zoome) ; `inputMode="decimal"` / `"numeric"`.
+- **Mobile à la salle :** cibles tactiles ≥ 44 px de haut (les boutons −/+ font 32 px de large pour 44 px de haut, faute de place) ; champs de saisie à **16 px minimum** (sinon iOS zoome) ; `inputMode="decimal"` / `"numeric"`.
 - **Styles :** ajouter des classes dans `globals.css` en réutilisant les variables (`--primary`, `--amber`…). Pas de nouvelles dépendances sans en discuter (le glisser-déposer des programmes est fait à la main, sans bibliothèque).
 - **Site statique obligatoire :** pas d'API routes, de Server Actions, de middleware ni de rendu dynamique côté serveur (ils casseraient l'export GitHub Pages et le futur Capacitor). Le workflow définit `BASE_PATH=/nom-du-depot` ; en local il est vide. Pour les liens et images, rester sur les composants/chemins Next (le `basePath` est géré automatiquement).
 - **Avant de livrer :** `pnpm typecheck` et `pnpm build` doivent passer. `ignoreBuildErrors` a été retiré volontairement.
@@ -120,12 +120,13 @@ lib/
 Dans `lib/data.ts` : les **réglages machines**, les **conseils** (`coachTip`) des exercices hors jambes, les **charges de départ** (`startWeight`) et la composition des programmes Push/Pull sont des exemples. À faire valider par Olivier. Le nom du coach est dans `lib/config.ts`.
 
 ## 🗺️ Feuille de route
-- [ ] Tester à la salle et corriger l'ergonomie (notamment la largeur des boutons +/− sur petit écran).
+- [ ] Tester à la salle et corriger l'ergonomie (notamment la largeur des boutons −/+ sur petit écran).
 - [x] Éditer un programme existant (séries, reps, ordre) : fait via `ProgramForm` ; les programmes d'Olivier se dupliquent pour être modifiés.
 - [x] Boutons +/− sur les reps (et la durée du cardio), saisie au clavier conservée.
 - [x] Note de ressenti sur plusieurs lignes.
 - [x] Historique des séances dans Progression (liste déroulante + résumé copiable).
 - [x] Durée de séance calculée de la première à la dernière série validée + 1 min.
+- [x] Boutons −/+ de part et d'autre du champ des reps ; pré-remplissage poids + reps depuis la dernière séance, série par série.
 - [ ] Réactiver le bouton WhatsApp si besoin (`WHATSAPP_ENABLED` dans `share-modal.tsx`).
 - [ ] Boutons +/− sur le poids (pas de 2,5 kg).
 - [ ] Modifier la charge de départ et le temps de repos de chaque exercice depuis le formulaire de programme.
@@ -139,7 +140,7 @@ Dans `lib/data.ts` : les **réglages machines**, les **conseils** (`coachTip`) d
 ## ⚠️ Limites connues
 - Sans synchronisation, les données restent sur l'appareil : effacer les données du navigateur les supprime. Avec la synchronisation, le cloud sert de copie. L'onglet **Progression** permet aussi d'exporter/restaurer un fichier JSON.
 - Synchronisation : pas de temps réel (vérification 2 s après une modification, au retour sur l'app / du réseau, et toutes les 24 h). Supprimer un exercice utilisé dans un programme le fait disparaître de ce programme (les séances passées le gardent). Les projets Supabase gratuits peuvent être mis en pause après une période d'inactivité.
-- Modifier un programme ne change pas les séances déjà enregistrées : seuls les exercices ajoutés apparaissent dans une séance du jour déjà commencée (les exercices retirés ou les séries/reps modifiées y restent tels quels). Les reps modifiées ne se voient donc que sur une séance neuve (autre jour, ou séance du jour pas encore touchée).
+- Modifier un programme ne change pas les séances déjà enregistrées : seuls les exercices ajoutés apparaissent dans une séance du jour déjà commencée (les exercices retirés ou les séries/reps modifiées y restent tels quels). Les reps cibles modifiées ne se voient que sur un exercice sans historique, car le pré-remplissage reprend la dernière séance.
 - Historique des séances : seules les séances terminées après l'ajout de `summary` y apparaissent (les anciennes n'ont pas de résumé). Le résumé est figé : si tu modifies une série après avoir terminé, rappuie sur « Terminer, sauvegarder & partager » pour le mettre à jour.
 - Le son et la vibration du chrono ne fonctionnent que si l'app est au premier plan (la vibration n'existe pas sur iOS Safari).
 - La semaine affichée est calculée au chargement ; si l'app reste ouverte après minuit, recharger la page.
