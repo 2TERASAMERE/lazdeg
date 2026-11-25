@@ -40,6 +40,15 @@ export function SetRow({ number, set, kind, onChange, onToggle }: Props) {
         </>
       )}
       <div className="stepper">
+        <button
+          type="button"
+          className="step-button"
+          aria-label={`Retirer une unité (${unitLabel}, série ${number})`}
+          disabled={reps <= 0}
+          onClick={() => stepReps(-1)}
+        >
+          <Minus size={16} />
+        </button>
         <input
           aria-label={cardio ? 'Durée en minutes' : `Répétitions de la série ${number}`}
           className="set-input reps"
@@ -51,15 +60,6 @@ export function SetRow({ number, set, kind, onChange, onToggle }: Props) {
           onFocus={selectAll}
           onChange={(e) => onChange('reps', e.target.value)}
         />
-        <button
-          type="button"
-          className="step-button"
-          aria-label={`Retirer une unité (${unitLabel}, série ${number})`}
-          disabled={reps <= 0}
-          onClick={() => stepReps(-1)}
-        >
-          <Minus size={16} />
-        </button>
         <button
           type="button"
           className="step-button"
