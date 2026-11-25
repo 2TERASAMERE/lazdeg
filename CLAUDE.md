@@ -38,7 +38,7 @@ app/
 components/
   app-shell.tsx         Onglets, semaine, programmes (créer/modifier/supprimer), chrono (point d'entrée client)
   topbar.tsx · bottom-nav.tsx · rest-timer-toast.tsx · exercise-icon.tsx · sync-panel.tsx
-  workout/              Séance : workout-view, day-strip, exercise-card, set-row (saisie + boutons −/+ de part et d'autre des reps), share-modal (bouton WhatsApp désactivé)
+  workout/              Séance : workout-view, day-strip (n'affiche que les jours programmés), exercise-card, set-row (saisie + boutons −/+ de part et d'autre des reps), share-modal (bouton WhatsApp désactivé)
   program/              program-view (planning hebdo + liste des programmes) · program-form (création/édition, séries/reps, glisser-déposer)
   glossary/             glossary-view (fiches + ajout/modif/suppression) · exercise-form
   progress/             progress-view (stats + export/import de sauvegarde) · session-history (liste déroulante des séances terminées + résumé copiable)
@@ -85,6 +85,7 @@ lib/
 - Déclencheurs : 2 s après une modification (`DEBOUNCE_MS`), retour sur l'app, retour du réseau, et vérification périodique **toutes les 24 h** (`POLL_MS = 86_400_000` dans `hooks/use-sync.ts`, valeur choisie volontairement). La synchro est facultative : sans configuration l'app reste 100 % locale.
 
 ## ⚙️ Comportements clés (à ne pas casser)
+- **Bande des jours (onglet Séance) :** `DayStrip` n'affiche **que les jours ayant un programme assigné** (les jours de repos sont masqués). La sélection par défaut (`AppShell`) est aujourd'hui s'il est programmé, sinon le prochain jour programmé de la semaine, sinon le dernier. Si le jour choisi à la main n'est plus programmé (planning modifié), on retombe sur la sélection par défaut. Sans aucun jour programmé : bande vide + état « Journée de repos » avec le bouton « Choisir une séance ». La bande est en flex (cartes `flex: 1 1 0`, largeur max 96 px) pour rester lisible avec peu de jours.
 - **Validation rapide :** bouton ✓ de 44 px. Valider une série lance le chrono avec le repos de l'exercice (préréglages 0:30 / 1:00 / 1:30 / 2:00), **sauf** pour le cardio (repos = 0) et pour la **toute dernière série** de la séance.
 - **Saisie des reps :** chaque série a un champ texte (clavier numérique) **entouré de deux boutons** : **−** à gauche, **+** à droite (`.stepper` dans `set-row.tsx`, ordre : −, champ, +). Les boutons partent de la valeur saisie (vide = 0), ne descendent jamais sous 0 et passent par `onChange('reps', …)`, donc par `setField` qui filtre déjà les caractères. Même fonctionnement pour la durée du cardio. Le champ prend la place restante (`flex: 1 1 0`). La colonne des reps est plus large que celle du poids (`1.7fr`) pour loger les boutons.
 - **Note de ressenti :** `<textarea>` (2 lignes minimum, redimensionnable) : Entrée = retour à la ligne. Les retours à la ligne sont conservés dans le résumé envoyé au coach.
@@ -127,6 +128,7 @@ Dans `lib/data.ts` : les **réglages machines**, les **conseils** (`coachTip`) d
 - [x] Historique des séances dans Progression (liste déroulante + résumé copiable).
 - [x] Durée de séance calculée de la première à la dernière série validée + 1 min.
 - [x] Boutons −/+ de part et d'autre du champ des reps ; pré-remplissage poids + reps depuis la dernière séance, série par série.
+- [x] Onglet Séance : la bande des jours n'affiche que les jours programmés (jours de repos masqués).
 - [ ] Réactiver le bouton WhatsApp si besoin (`WHATSAPP_ENABLED` dans `share-modal.tsx`).
 - [ ] Boutons +/− sur le poids (pas de 2,5 kg).
 - [ ] Modifier la charge de départ et le temps de repos de chaque exercice depuis le formulaire de programme.
